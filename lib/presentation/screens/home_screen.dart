@@ -4,6 +4,7 @@ import '../widgets/category_card.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/hero_banner.dart';
 import 'detail_list_screen.dart';
+import 'settings_screen.dart';
 import '../../data/database/database_helper.dart';
 
 /// The main home screen of the Password Manager app.
@@ -167,13 +168,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _navigateToDetail(String categoryName) {
-    Navigator.push(
+  void _navigateToDetail(String categoryName) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => DetailListScreen(categoryName: categoryName),
       ),
     );
+    // Refresh counts after returning
+    if (mounted) _loadCategoryCounts();
+  }
+
+  void _navigateToSettings() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+    );
+    // Refresh counts after returning (in case data was reset)
+    if (mounted) _loadCategoryCounts();
   }
 
   Widget _buildBottomNavigationBar() {
@@ -208,9 +220,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return InkWell(
       onTap: () {
-        setState(() {
-          _currentNavIndex = index;
-        });
+        if (index == 2) {
+          // Settings
+          _navigateToSettings();
+        } else {
+          setState(() {
+            _currentNavIndex = index;
+          });
+        }
       },
       borderRadius: BorderRadius.circular(12),
       child: Padding(

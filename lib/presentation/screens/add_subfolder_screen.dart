@@ -3,11 +3,16 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../data/models/subfolder_model.dart';
 import '../../data/database/database_helper.dart';
 
-/// Screen for adding a new subfolder.
+/// Screen for adding or editing a subfolder.
 class AddSubfolderScreen extends StatefulWidget {
   final String category;
+  final SubfolderModel? existingSubfolder; // For edit mode
 
-  const AddSubfolderScreen({super.key, required this.category});
+  const AddSubfolderScreen({
+    super.key,
+    required this.category,
+    this.existingSubfolder,
+  });
 
   @override
   State<AddSubfolderScreen> createState() => _AddSubfolderScreenState();
@@ -17,6 +22,16 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   bool _isLoading = false;
+
+  bool get isEditMode => widget.existingSubfolder != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (isEditMode) {
+      _nameController.text = widget.existingSubfolder!.name;
+    }
+  }
 
   @override
   void dispose() {
@@ -31,21 +46,100 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
 
     try {
       final subfolder = SubfolderModel(
+        id: widget.existingSubfolder?.id,
         name: _nameController.text.trim(),
         category: widget.category,
       );
 
-      await DatabaseHelper.instance.insertSubfolder(subfolder);
+      if (isEditMode) {
+        await DatabaseHelper.instance.updateSubfolder(subfolder);
+      } else {
+        await DatabaseHelper.instance.insertSubfolder(subfolder);
+      }
 
       if (mounted) {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Subfolder berhasil ditambahkan',
+              isEditMode
+                  ? 'Sub-judul berhasil diupdate'
+                  : 'Sub-judul berhasil ditambahkan',
               style: GoogleFonts.poppins(),
             ),
             backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e', style: GoogleFonts.poppins()),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _deleteSubfolder() async {
+    // Get account count in this subfolder
+    final accountCount = await DatabaseHelper.instance.getSubfolderAccountCount(
+      widget.existingSubfolder!.id!,
+    );
+
+    if (!mounted) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Hapus Sub-Judul',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          accountCount > 0
+              ? 'Sub-judul "${widget.existingSubfolder?.name}" berisi $accountCount akun. Akun-akun tersebut akan dipindahkan ke kategori utama. Lanjutkan?'
+              : 'Apakah Anda yakin ingin menghapus sub-judul "${widget.existingSubfolder?.name}"?',
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Batal', style: GoogleFonts.poppins()),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text('Hapus', style: GoogleFonts.poppins()),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await DatabaseHelper.instance.deleteSubfolder(
+        widget.existingSubfolder!.id!,
+      );
+
+      if (mounted) {
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Sub-judul berhasil dihapus',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: const Color(0xFFEF4444),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -80,7 +174,7 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Tambah Sub-Judul',
+          isEditMode ? 'Edit Sub-Judul' : 'Tambah Sub-Judul',
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -88,6 +182,17 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
           ),
         ),
         centerTitle: true,
+        actions: isEditMode
+            ? [
+                IconButton(
+                  icon: const Icon(
+                    Icons.delete_rounded,
+                    color: Color(0xFFEF4444),
+                  ),
+                  onPressed: _deleteSubfolder,
+                ),
+              ]
+            : null,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -198,7 +303,7 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
                           ),
                         )
                       : Text(
-                          'Simpan',
+                          isEditMode ? 'Update' : 'Simpan',
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,

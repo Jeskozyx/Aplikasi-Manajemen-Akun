@@ -8,6 +8,7 @@ import '../../data/database/database_helper.dart';
 import 'add_subfolder_screen.dart';
 import 'add_account_screen.dart';
 import 'subfolder_detail_screen.dart';
+import 'bulk_import_screen.dart';
 
 /// Screen to display passwords and subfolders for a specific category.
 class DetailListScreen extends StatefulWidget {
@@ -76,6 +77,22 @@ class _DetailListScreenState extends State<DetailListScreen> {
     }
   }
 
+  void _navigateToEditSubfolder(SubfolderModel subfolder) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddSubfolderScreen(
+          category: widget.categoryName,
+          existingSubfolder: subfolder,
+        ),
+      ),
+    );
+
+    if (result == true) {
+      _loadData();
+    }
+  }
+
   void _navigateToAddAccount() async {
     final result = await Navigator.push(
       context,
@@ -89,11 +106,40 @@ class _DetailListScreenState extends State<DetailListScreen> {
     }
   }
 
+  void _navigateToEditAccount(PasswordModel account) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddAccountScreen(
+          category: widget.categoryName,
+          existingAccount: account,
+        ),
+      ),
+    );
+
+    if (result == true) {
+      _loadData();
+    }
+  }
+
   void _navigateToSubfolder(SubfolderModel subfolder) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => SubfolderDetailScreen(subfolder: subfolder),
+      ),
+    );
+
+    if (result == true) {
+      _loadData();
+    }
+  }
+
+  void _navigateToBulkImport() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BulkImportScreen(category: widget.categoryName),
       ),
     );
 
@@ -148,13 +194,25 @@ class _DetailListScreenState extends State<DetailListScreen> {
           children: [
             // Subfolders section
             if (_subfolders.isNotEmpty) ...[
-              Text(
-                'Sub-Judul',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF2D3748),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Sub-Judul',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF2D3748),
+                    ),
+                  ),
+                  Text(
+                    'Tekan lama untuk edit',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: const Color(0xFF718096),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               ..._subfolders.map(
@@ -162,6 +220,7 @@ class _DetailListScreenState extends State<DetailListScreen> {
                   name: subfolder.name,
                   accountCount: _subfolderCounts[subfolder.id] ?? 0,
                   onTap: () => _navigateToSubfolder(subfolder),
+                  onLongPress: () => _navigateToEditSubfolder(subfolder),
                 ),
               ),
               const SizedBox(height: 24),
@@ -169,13 +228,25 @@ class _DetailListScreenState extends State<DetailListScreen> {
 
             // Direct accounts section
             if (_directAccounts.isNotEmpty) ...[
-              Text(
-                'Akun Langsung',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF2D3748),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Akun Langsung',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF2D3748),
+                    ),
+                  ),
+                  Text(
+                    'Tap untuk edit',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: const Color(0xFF718096),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               ..._directAccounts.map(
@@ -186,6 +257,7 @@ class _DetailListScreenState extends State<DetailListScreen> {
                   username: account.username,
                   password: account.password,
                   isActive: account.isActive,
+                  onTap: () => _navigateToEditAccount(account),
                 ),
               ),
             ],
@@ -237,6 +309,16 @@ class _DetailListScreenState extends State<DetailListScreen> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Bulk Import FAB
+        FloatingActionButton.small(
+          heroTag: 'import',
+          onPressed: _navigateToBulkImport,
+          backgroundColor: const Color(0xFF10B981),
+          foregroundColor: Colors.white,
+          elevation: 4,
+          child: const Icon(Icons.upload_rounded, size: 20),
+        ),
+        const SizedBox(height: 8),
         // Add Subfolder FAB
         FloatingActionButton.extended(
           heroTag: 'subfolder',

@@ -3,17 +3,19 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../data/models/password_model.dart';
 import '../../data/database/database_helper.dart';
 
-/// Screen for adding a new password account.
+/// Screen for adding or editing a password account.
 class AddAccountScreen extends StatefulWidget {
   final String category;
   final int? subfolderId;
   final String? subfolderName;
+  final PasswordModel? existingAccount; // For edit mode
 
   const AddAccountScreen({
     super.key,
     required this.category,
     this.subfolderId,
     this.subfolderName,
+    this.existingAccount,
   });
 
   @override
@@ -30,6 +32,22 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
   bool _isActive = true;
   bool _isLoading = false;
   bool _showPassword = false;
+
+  bool get isEditMode => widget.existingAccount != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (isEditMode) {
+      final account = widget.existingAccount!;
+      _titleController.text = account.title;
+      _accountNameController.text = account.accountName;
+      _emailController.text = account.email ?? '';
+      _usernameController.text = account.username ?? '';
+      _passwordController.text = account.password;
+      _isActive = account.isActive;
+    }
+  }
 
   @override
   void dispose() {
@@ -48,6 +66,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
 
     try {
       final password = PasswordModel(
+        id: widget.existingAccount?.id,
         title: _titleController.text.trim(),
         accountName: _accountNameController.text.trim(),
         email: _emailController.text.trim().isEmpty
@@ -59,20 +78,87 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
         password: _passwordController.text,
         isActive: _isActive,
         category: widget.category,
-        subfolderId: widget.subfolderId,
+        subfolderId: widget.subfolderId ?? widget.existingAccount?.subfolderId,
       );
 
-      await DatabaseHelper.instance.insertPassword(password);
+      if (isEditMode) {
+        await DatabaseHelper.instance.updatePassword(password);
+      } else {
+        await DatabaseHelper.instance.insertPassword(password);
+      }
 
       if (mounted) {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Akun berhasil ditambahkan',
+              isEditMode
+                  ? 'Akun berhasil diupdate'
+                  : 'Akun berhasil ditambahkan',
               style: GoogleFonts.poppins(),
             ),
             backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e', style: GoogleFonts.poppins()),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Hapus Akun',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus akun "${widget.existingAccount?.title}"?',
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Batal', style: GoogleFonts.poppins()),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text('Hapus', style: GoogleFonts.poppins()),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await DatabaseHelper.instance.deletePassword(widget.existingAccount!.id!);
+
+      if (mounted) {
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Akun berhasil dihapus',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: const Color(0xFFEF4444),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -107,7 +193,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Tambah Akun',
+          isEditMode ? 'Edit Akun' : 'Tambah Akun',
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -115,6 +201,17 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
           ),
         ),
         centerTitle: true,
+        actions: isEditMode
+            ? [
+                IconButton(
+                  icon: const Icon(
+                    Icons.delete_rounded,
+                    color: Color(0xFFEF4444),
+                  ),
+                  onPressed: _deleteAccount,
+                ),
+              ]
+            : null,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -333,7 +430,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                           ),
                         )
                       : Text(
-                          'Simpan',
+                          isEditMode ? 'Update' : 'Simpan',
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,

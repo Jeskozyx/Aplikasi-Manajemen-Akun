@@ -3,12 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../data/models/password_model.dart';
 import '../../data/database/database_helper.dart';
 
-/// Screen for adding or editing a password account.
 class AddAccountScreen extends StatefulWidget {
   final String category;
   final int? subfolderId;
   final String? subfolderName;
-  final PasswordModel? existingAccount; // For edit mode
+  final PasswordModel? existingAccount;
 
   const AddAccountScreen({
     super.key,
@@ -24,38 +23,36 @@ class AddAccountScreen extends StatefulWidget {
 
 class _AddAccountScreenState extends State<AddAccountScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _accountNameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isActive = true;
+  late TextEditingController _titleController;
+  late TextEditingController _accountNameController;
+  late TextEditingController _usernameController;
+  late TextEditingController _passwordController;
+  late TextEditingController _emailController;
+  late bool _isActive;
   bool _isLoading = false;
-  bool _showPassword = false;
-
-  bool get isEditMode => widget.existingAccount != null;
+  bool _isPasswordVisible = false;
 
   @override
   void initState() {
     super.initState();
-    if (isEditMode) {
-      final account = widget.existingAccount!;
-      _titleController.text = account.title;
-      _accountNameController.text = account.accountName;
-      _emailController.text = account.email ?? '';
-      _usernameController.text = account.username ?? '';
-      _passwordController.text = account.password;
-      _isActive = account.isActive;
-    }
+    final account = widget.existingAccount;
+    _titleController = TextEditingController(text: account?.title ?? '');
+    _accountNameController = TextEditingController(
+      text: account?.accountName ?? '',
+    );
+    _usernameController = TextEditingController(text: account?.username ?? '');
+    _passwordController = TextEditingController(text: account?.password ?? '');
+    _emailController = TextEditingController(text: account?.email ?? '');
+    _isActive = account?.isActive ?? true;
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _accountNameController.dispose();
-    _emailController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -65,26 +62,22 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final password = PasswordModel(
+      final account = PasswordModel(
         id: widget.existingAccount?.id,
-        title: _titleController.text.trim(),
-        accountName: _accountNameController.text.trim(),
-        email: _emailController.text.trim().isEmpty
-            ? null
-            : _emailController.text.trim(),
-        username: _usernameController.text.trim().isEmpty
-            ? null
-            : _usernameController.text.trim(),
-        password: _passwordController.text,
-        isActive: _isActive,
         category: widget.category,
-        subfolderId: widget.subfolderId ?? widget.existingAccount?.subfolderId,
+        subfolderId: widget.subfolderId,
+        title: _titleController.text,
+        accountName: _accountNameController.text,
+        username: _usernameController.text,
+        password: _passwordController.text,
+        email: _emailController.text,
+        isActive: _isActive,
       );
 
-      if (isEditMode) {
-        await DatabaseHelper.instance.updatePassword(password);
+      if (widget.existingAccount == null) {
+        await DatabaseHelper.instance.insertPassword(account);
       } else {
-        await DatabaseHelper.instance.insertPassword(password);
+        await DatabaseHelper.instance.updatePassword(account);
       }
 
       if (mounted) {
@@ -92,9 +85,9 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              isEditMode
-                  ? 'Akun berhasil diupdate'
-                  : 'Akun berhasil ditambahkan',
+              widget.existingAccount == null
+                  ? 'Account added successfully'
+                  : 'Account updated successfully',
               style: GoogleFonts.poppins(),
             ),
             backgroundColor: const Color(0xFF10B981),
@@ -122,22 +115,25 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          'Hapus Akun',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          'Delete Account',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
         content: Text(
-          'Apakah Anda yakin ingin menghapus akun "${widget.existingAccount?.title}"?',
+          'Are you sure you want to delete this account?',
           style: GoogleFonts.poppins(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Batal', style: GoogleFonts.poppins()),
+            child: Text('Cancel', style: GoogleFonts.poppins()),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text('Hapus', style: GoogleFonts.poppins()),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -154,25 +150,14 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Akun berhasil dihapus',
-              style: GoogleFonts.poppins(),
-            ),
+            content: Text('Account deleted', style: GoogleFonts.poppins()),
             backgroundColor: const Color(0xFFEF4444),
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e', style: GoogleFonts.poppins()),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+      debugPrint('Error deleting account: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -185,240 +170,197 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_rounded,
-            color: Color(0xFF2D3748),
+        centerTitle: true,
+        leading: Container(
+          margin: const EdgeInsets.only(left: 16),
+          child: IconButton(
+            icon: const Icon(Icons.close_rounded, color: Color(0xFF2D3748)),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () => Navigator.pop(context),
           ),
-          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          isEditMode ? 'Edit Akun' : 'Tambah Akun',
+          widget.existingAccount == null ? 'New Account' : 'Edit Account',
           style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
             color: const Color(0xFF2D3748),
           ),
         ),
-        centerTitle: true,
-        actions: isEditMode
-            ? [
-                IconButton(
-                  icon: const Icon(
-                    Icons.delete_rounded,
-                    color: Color(0xFFEF4444),
-                  ),
-                  onPressed: _deleteAccount,
+        actions: [
+          if (widget.existingAccount != null)
+            Container(
+              margin: const EdgeInsets.only(right: 16),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Color(0xFFEF4444),
                 ),
-              ]
-            : null,
+                style: IconButton.styleFrom(
+                  backgroundColor: const Color(0xFFFEE2E2),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _isLoading ? null : _deleteAccount,
+              ),
+            ),
+        ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Category/Subfolder info
+              // Context Info
               Container(
+                margin: const EdgeInsets.only(bottom: 24),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF3F0FF),
-                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFFE0E7FF),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFC7D2FE)),
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      widget.subfolderId != null
-                          ? Icons.folder_rounded
-                          : Icons.category_rounded,
-                      color: const Color(0xFF6C63FF),
+                    const Icon(
+                      Icons.folder_shared_rounded,
+                      color: Color(0xFF4338CA),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        widget.subfolderId != null
-                            ? '${widget.category} > ${widget.subfolderName}'
-                            : widget.category,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF6C63FF),
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Location',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: const Color(0xFF4338CA),
+                            ),
+                          ),
+                          Text(
+                            widget.subfolderName != null
+                                ? '${widget.category} > ${widget.subfolderName}'
+                                : widget.category,
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF312E81),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
 
-              // Title field (required)
-              _buildLabel('Judul', isRequired: true),
-              const SizedBox(height: 8),
               _buildTextField(
                 controller: _titleController,
-                hint: 'Contoh: Akun Utama, Akun Kedua',
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Judul wajib diisi';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Account name field (required)
-              _buildLabel('Nama Akun', isRequired: true),
-              const SizedBox(height: 8),
-              _buildTextField(
-                controller: _accountNameController,
-                hint: 'Contoh: John Doe, GamerPro123',
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Nama akun wajib diisi';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Email field (optional)
-              _buildLabel('Email', isRequired: false),
-              const SizedBox(height: 8),
-              _buildTextField(
-                controller: _emailController,
-                hint: 'Contoh: user@email.com (opsional)',
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-
-              // Username field (optional)
-              _buildLabel('Username', isRequired: false),
-              const SizedBox(height: 8),
-              _buildTextField(
-                controller: _usernameController,
-                hint: 'Contoh: username123 (opsional)',
-              ),
-              const SizedBox(height: 16),
-
-              // Password field (required)
-              _buildLabel('Password', isRequired: true),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: !_showPassword,
-                style: GoogleFonts.poppins(fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'Masukkan password',
-                  hintStyle: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: const Color(0xFF718096),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Color(0xFF6C63FF),
-                      width: 2,
-                    ),
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Color(0xFFEF4444),
-                      width: 1,
-                    ),
-                  ),
-                  contentPadding: const EdgeInsets.all(16),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _showPassword
-                          ? Icons.visibility_off_rounded
-                          : Icons.visibility_rounded,
-                      color: const Color(0xFF718096),
-                    ),
-                    onPressed: () {
-                      setState(() => _showPassword = !_showPassword);
-                    },
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Password wajib diisi';
-                  }
-                  return null;
-                },
+                label: 'Title',
+                hint: 'e.g. Personal Instagram',
+                icon: Icons.title_rounded,
+                validator: (value) =>
+                    value?.isEmpty ?? true ? 'Required' : null,
               ),
               const SizedBox(height: 20),
 
-              // Active status switch
+              _buildTextField(
+                controller: _accountNameController,
+                label: 'Account Name',
+                hint: 'e.g. Instagram',
+                icon: Icons.badge_rounded,
+                validator: (value) =>
+                    value?.isEmpty ?? true ? 'Required' : null,
+              ),
+              const SizedBox(height: 20),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      controller: _usernameController,
+                      label: 'Username',
+                      hint: 'user123',
+                      icon: Icons.alternate_email_rounded,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              _buildTextField(
+                controller: _passwordController,
+                label: 'Password',
+                hint: '••••••',
+                icon: Icons.lock_outline_rounded,
+                isPassword: true,
+                validator: (value) =>
+                    value?.isEmpty ?? true ? 'Required' : null,
+              ),
+              const SizedBox(height: 20),
+
+              _buildTextField(
+                controller: _emailController,
+                label: 'Email (Optional)',
+                hint: 'user@example.com',
+                icon: Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 24),
+
+              // Active Switch
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Status Akun',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF2D3748),
-                          ),
-                        ),
-                        Text(
-                          _isActive ? 'Aktif' : 'Tidak Aktif',
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: _isActive
-                                ? const Color(0xFF10B981)
-                                : const Color(0xFFEF4444),
-                          ),
-                        ),
-                      ],
+                child: SwitchListTile(
+                  title: Text(
+                    'Active Account',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF2D3748),
                     ),
-                    Switch(
-                      value: _isActive,
-                      onChanged: (value) {
-                        setState(() => _isActive = value);
-                      },
-                      activeTrackColor: const Color(0xFF6C63FF),
-                      thumbColor: WidgetStateProperty.all(Colors.white),
-                    ),
-                  ],
+                  ),
+                  value: _isActive,
+                  activeTrackColor: const Color(0xFF10B981),
+                  onChanged: (val) => setState(() => _isActive = val),
+                  contentPadding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 40),
 
-              // Save button
+              // Save Button
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 56,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _saveAccount,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6C63FF),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    elevation: 0,
+                    elevation: 4,
+                    shadowColor: const Color(0xFF6C63FF).withValues(alpha: 0.4),
                   ),
                   child: _isLoading
                       ? const SizedBox(
@@ -426,19 +368,19 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                           height: 24,
                           child: CircularProgressIndicator(
                             color: Colors.white,
-                            strokeWidth: 2,
+                            strokeWidth: 3,
                           ),
                         )
                       : Text(
-                          isEditMode ? 'Update' : 'Simpan',
+                          'Save Account',
                           style: GoogleFonts.poppins(
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -446,72 +388,80 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
     );
   }
 
-  Widget _buildLabel(String text, {required bool isRequired}) {
-    return Row(
-      children: [
-        Text(
-          text,
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF2D3748),
-          ),
-        ),
-        if (isRequired) ...[
-          const SizedBox(width: 4),
-          const Text('*', style: TextStyle(color: Color(0xFFEF4444))),
-        ],
-        if (!isRequired) ...[
-          const SizedBox(width: 8),
-          Text(
-            '(opsional)',
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: const Color(0xFF718096),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
   Widget _buildTextField({
     required TextEditingController controller,
+    required String label,
     required String hint,
-    TextInputType keyboardType = TextInputType.text,
+    required IconData icon,
+    bool isPassword = false,
+    TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      style: GoogleFonts.poppins(fontSize: 14),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: GoogleFonts.poppins(
-          fontSize: 14,
-          color: const Color(0xFF718096),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF4A5568),
+          ),
         ),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          obscureText: isPassword && !_isPasswordVisible,
+          keyboardType: keyboardType,
+          style: GoogleFonts.poppins(
+            fontSize: 16, // Larger input text
+            color: const Color(0xFF2D3748),
+          ),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: GoogleFonts.poppins(
+              color: const Color(0xFFA0AEC0),
+              fontSize: 14,
+            ),
+            prefixIcon: Icon(icon, color: const Color(0xFF718096)),
+            suffixIcon: isPassword
+                ? IconButton(
+                    icon: Icon(
+                      _isPasswordVisible
+                          ? Icons.visibility_off_rounded
+                          : Icons.visibility_rounded,
+                      color: const Color(0xFF718096),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  )
+                : null,
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Color(0xFFEF4444)),
+            ),
+            contentPadding: const EdgeInsets.all(20), // Taller input
+          ),
+          validator: validator,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1),
-        ),
-        contentPadding: const EdgeInsets.all(16),
-      ),
-      validator: validator,
+      ],
     );
   }
 }

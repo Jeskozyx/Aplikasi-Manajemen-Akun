@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// A card widget representing a password account entry.
 class AccountCard extends StatefulWidget {
   final String title;
   final String accountName;
@@ -10,7 +9,6 @@ class AccountCard extends StatefulWidget {
   final String password;
   final bool isActive;
   final VoidCallback? onTap;
-  final VoidCallback? onLongPress;
 
   const AccountCard({
     super.key,
@@ -21,7 +19,6 @@ class AccountCard extends StatefulWidget {
     required this.password,
     required this.isActive,
     this.onTap,
-    this.onLongPress,
   });
 
   @override
@@ -29,179 +26,164 @@ class AccountCard extends StatefulWidget {
 }
 
 class _AccountCardState extends State<AccountCard> {
-  bool _showPassword = false;
+  bool _isPasswordVisible = false;
+
+  // Warna yang kontras agar mudah dibaca
+  final Color _textMain = const Color(
+    0xFF111827,
+  ); // Abu-abu gelap (Hampir hitam)
+  final Color _textSub = const Color(0xFF6B7280); // Abu-abu sedang
+  final Color _accentColor = const Color(0xFF2563EB); // Biru (Jelas & Tegas)
 
   @override
   Widget build(BuildContext context) {
+    final String subtitle =
+        (widget.username != null && widget.username!.isNotEmpty)
+        ? widget.username!
+        : (widget.email ?? 'No identity');
+
     return GestureDetector(
       onTap: widget.onTap,
-      onLongPress: widget.onLongPress,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
           boxShadow: [
             BoxShadow(
-              color: const Color(0x0A000000),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(
-            color: widget.isActive
-                ? const Color(0xFF10B981).withValues(alpha: 0.3)
-                : const Color(0xFFEF4444).withValues(alpha: 0.3),
-            width: 1,
-          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header row
+            // Header: Icon + Judul
             Row(
               children: [
-                // Account icon
+                // Icon Shield Biru
                 Container(
-                  width: 40,
-                  height: 40,
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: widget.isActive
-                        ? const Color(0xFFD1FAE5)
-                        : const Color(0xFFFEE2E2),
-                    borderRadius: BorderRadius.circular(10),
+                    color: _accentColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    Icons.person_rounded,
+                    Icons.shield_outlined,
+                    color: _accentColor,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: 14),
+
+                // Judul Akun (Poppins Bold - Sangat Jelas)
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700, // Tebal
+                      color: _textMain,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+
+                // Status Dot
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
                     color: widget.isActive
                         ? const Color(0xFF10B981)
                         : const Color(0xFFEF4444),
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Title and account name
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.title,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF2D3748),
-                        ),
-                      ),
-                      Text(
-                        widget.accountName,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: const Color(0xFF718096),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Status badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: widget.isActive
-                        ? const Color(0xFFD1FAE5)
-                        : const Color(0xFFFEE2E2),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    widget.isActive ? 'Aktif' : 'Nonaktif',
-                    style: GoogleFonts.poppins(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                      color: widget.isActive
-                          ? const Color(0xFF059669)
-                          : const Color(0xFFDC2626),
-                    ),
+                    border: Border.all(color: Colors.white, width: 2),
                   ),
                 ),
               ],
             ),
+
             const SizedBox(height: 12),
-            // Details
-            if (widget.email != null && widget.email!.isNotEmpty) ...[
-              _buildInfoRow(Icons.email_outlined, widget.email!),
-              const SizedBox(height: 6),
-            ],
-            if (widget.username != null && widget.username!.isNotEmpty) ...[
-              _buildInfoRow(Icons.alternate_email, widget.username!),
-              const SizedBox(height: 6),
-            ],
-            // Password row
-            Row(
-              children: [
-                const Icon(
-                  Icons.lock_outline_rounded,
-                  size: 16,
-                  color: Color(0xFF718096),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _showPassword ? widget.password : '••••••••',
-                    style: _showPassword
-                        ? GoogleFonts.poppins(
-                            fontSize: 12,
-                            color: const Color(0xFF718096),
-                          )
-                        : const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF718096),
-                            fontFamily: 'monospace',
-                            letterSpacing: 2,
-                          ),
+            Divider(height: 1, color: Colors.grey.shade100),
+            const SizedBox(height: 12),
+
+            // Info Username (Inter - Mudah dibaca untuk teks kecil)
+            Text(
+              "USERNAME / EMAIL",
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade400,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: _textSub,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Password Section
+            Text(
+              "PASSWORD",
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade400,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 2),
+            GestureDetector(
+              onTap: () =>
+                  setState(() => _isPasswordVisible = !_isPasswordVisible),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _isPasswordVisible ? widget.password : "••••••••••••",
+                      style: _isPasswordVisible
+                          ? GoogleFonts.robotoMono(
+                              // Monospace agar huruf 'l' dan '1' beda
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: _textMain,
+                            )
+                          : GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              color: _textMain,
+                              letterSpacing: 2,
+                            ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _showPassword = !_showPassword;
-                    });
-                  },
-                  child: Icon(
-                    _showPassword
-                        ? Icons.visibility_off_rounded
-                        : Icons.visibility_rounded,
+                  Icon(
+                    _isPasswordVisible
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
                     size: 20,
-                    color: const Color(0xFF6C63FF),
+                    color: Colors.grey.shade400,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: const Color(0xFF718096)),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: const Color(0xFF718096),
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
     );
   }
 }

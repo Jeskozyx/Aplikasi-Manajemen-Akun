@@ -3,10 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../data/models/subfolder_model.dart';
 import '../../data/database/database_helper.dart';
 
-/// Screen for adding or editing a subfolder.
 class AddSubfolderScreen extends StatefulWidget {
   final String category;
-  final SubfolderModel? existingSubfolder; // For edit mode
+  final SubfolderModel? existingSubfolder;
 
   const AddSubfolderScreen({
     super.key,
@@ -20,17 +19,15 @@ class AddSubfolderScreen extends StatefulWidget {
 
 class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  late TextEditingController _nameController;
   bool _isLoading = false;
-
-  bool get isEditMode => widget.existingSubfolder != null;
 
   @override
   void initState() {
     super.initState();
-    if (isEditMode) {
-      _nameController.text = widget.existingSubfolder!.name;
-    }
+    _nameController = TextEditingController(
+      text: widget.existingSubfolder?.name ?? '',
+    );
   }
 
   @override
@@ -47,14 +44,14 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
     try {
       final subfolder = SubfolderModel(
         id: widget.existingSubfolder?.id,
-        name: _nameController.text.trim(),
         category: widget.category,
+        name: _nameController.text,
       );
 
-      if (isEditMode) {
-        await DatabaseHelper.instance.updateSubfolder(subfolder);
-      } else {
+      if (widget.existingSubfolder == null) {
         await DatabaseHelper.instance.insertSubfolder(subfolder);
+      } else {
+        await DatabaseHelper.instance.updateSubfolder(subfolder);
       }
 
       if (mounted) {
@@ -62,9 +59,9 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              isEditMode
-                  ? 'Sub-judul berhasil diupdate'
-                  : 'Sub-judul berhasil ditambahkan',
+              widget.existingSubfolder == null
+                  ? 'Folder added successfully'
+                  : 'Folder updated successfully',
               style: GoogleFonts.poppins(),
             ),
             backgroundColor: const Color(0xFF10B981),
@@ -88,35 +85,29 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
   }
 
   Future<void> _deleteSubfolder() async {
-    // Get account count in this subfolder
-    final accountCount = await DatabaseHelper.instance.getSubfolderAccountCount(
-      widget.existingSubfolder!.id!,
-    );
-
-    if (!mounted) return;
-
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          'Hapus Sub-Judul',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          'Delete Folder',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
         content: Text(
-          accountCount > 0
-              ? 'Sub-judul "${widget.existingSubfolder?.name}" berisi $accountCount akun. Akun-akun tersebut akan dipindahkan ke kategori utama. Lanjutkan?'
-              : 'Apakah Anda yakin ingin menghapus sub-judul "${widget.existingSubfolder?.name}"?',
+          'Are you sure you want to delete this folder?\nAll accounts inside it will also be deleted.',
           style: GoogleFonts.poppins(),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Batal', style: GoogleFonts.poppins()),
+            child: Text('Cancel', style: GoogleFonts.poppins()),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text('Hapus', style: GoogleFonts.poppins()),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -135,25 +126,14 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Sub-judul berhasil dihapus',
-              style: GoogleFonts.poppins(),
-            ),
+            content: Text('Folder deleted', style: GoogleFonts.poppins()),
             backgroundColor: const Color(0xFFEF4444),
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e', style: GoogleFonts.poppins()),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+      debugPrint('Error deleting subfolder: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -166,132 +146,164 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_rounded,
-            color: Color(0xFF2D3748),
+        centerTitle: true,
+        leading: Container(
+          margin: const EdgeInsets.only(left: 16),
+          child: IconButton(
+            icon: const Icon(Icons.close_rounded, color: Color(0xFF2D3748)),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () => Navigator.pop(context),
           ),
-          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          isEditMode ? 'Edit Sub-Judul' : 'Tambah Sub-Judul',
+          widget.existingSubfolder == null ? 'New Folder' : 'Edit Folder',
           style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
             color: const Color(0xFF2D3748),
           ),
         ),
-        centerTitle: true,
-        actions: isEditMode
-            ? [
-                IconButton(
-                  icon: const Icon(
-                    Icons.delete_rounded,
-                    color: Color(0xFFEF4444),
-                  ),
-                  onPressed: _deleteSubfolder,
+        actions: [
+          if (widget.existingSubfolder != null)
+            Container(
+              margin: const EdgeInsets.only(right: 16),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Color(0xFFEF4444),
                 ),
-              ]
-            : null,
+                style: IconButton.styleFrom(
+                  backgroundColor: const Color(0xFFFEE2E2),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _isLoading ? null : _deleteSubfolder,
+              ),
+            ),
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Category info
+              // Info Card
               Container(
+                margin: const EdgeInsets.only(bottom: 24),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF3F0FF),
-                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFFEDE9FE),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFDDD6FE)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.folder_rounded, color: Color(0xFF6C63FF)),
+                    const Icon(
+                      Icons.category_rounded,
+                      color: Color(0xFF7C3AED),
+                    ),
                     const SizedBox(width: 12),
-                    Text(
-                      'Kategori: ${widget.category}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF6C63FF),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Category',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: const Color(0xFF7C3AED),
+                            ),
+                          ),
+                          Text(
+                            widget.category,
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF5B21B6),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
 
-              // Name field
               Text(
-                'Nama Sub-Judul',
+                'Folder Name',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF2D3748),
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF4A5568),
                 ),
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _nameController,
-                style: GoogleFonts.poppins(fontSize: 14),
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  color: const Color(0xFF2D3748),
+                ),
                 decoration: InputDecoration(
-                  hintText: 'Contoh: Mobile Legends, Genshin Impact',
+                  hintText: 'e.g. Work Accounts',
                   hintStyle: GoogleFonts.poppins(
+                    color: const Color(0xFFA0AEC0),
                     fontSize: 14,
-                    color: const Color(0xFF718096),
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.folder_open_rounded,
+                    color: Color(0xFF718096),
                   ),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                     borderSide: const BorderSide(
                       color: Color(0xFF6C63FF),
                       width: 2,
                     ),
                   ),
                   errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Color(0xFFEF4444),
-                      width: 1,
-                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: Color(0xFFEF4444)),
                   ),
-                  contentPadding: const EdgeInsets.all(16),
+                  contentPadding: const EdgeInsets.all(20),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Nama sub-judul wajib diisi';
-                  }
-                  return null;
-                },
+                validator: (value) =>
+                    value?.isEmpty ?? true ? 'Folder name is required' : null,
               ),
-              const SizedBox(height: 32),
 
-              // Save button
+              const Spacer(),
+
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 56,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _saveSubfolder,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF6C63FF),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    elevation: 0,
+                    elevation: 4,
+                    shadowColor: const Color(0xFF6C63FF).withValues(alpha: 0.4),
                   ),
                   child: _isLoading
                       ? const SizedBox(
@@ -299,18 +311,19 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
                           height: 24,
                           child: CircularProgressIndicator(
                             color: Colors.white,
-                            strokeWidth: 2,
+                            strokeWidth: 3,
                           ),
                         )
                       : Text(
-                          isEditMode ? 'Update' : 'Simpan',
+                          'Save Folder',
                           style: GoogleFonts.poppins(
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                 ),
               ),
+              const SizedBox(height: 24),
             ],
           ),
         ),

@@ -1,20 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/category_card.dart';
-import '../widgets/search_bar_widget.dart';
-import '../widgets/hero_banner.dart';
+
 import 'detail_list_screen.dart';
 import 'settings_screen.dart';
 import '../../data/database/database_helper.dart';
 
-/// The main home screen of the Password Manager app.
-///
-/// Features:
-/// - Header with greeting
-/// - Search bar
-/// - Hero banner with security messaging
-/// - 2x2 grid of password categories
-/// - Bottom navigation with floating action button
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -23,6 +13,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Logic tetap sama
   int _currentNavIndex = 0;
   Map<String, int> _categoryCounts = {
     'Games': 0,
@@ -44,128 +35,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _categoryCounts = counts;
       });
     } catch (e) {
-      // Database not initialized yet, use default counts
       debugPrint('Database not initialized: $e');
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              _buildHeader(),
-              const SizedBox(height: 24),
-
-              // Search Bar
-              const SearchBarWidget(),
-              const SizedBox(height: 24),
-
-              // Hero Banner
-              const HeroBanner(),
-              const SizedBox(height: 28),
-
-              // Category Section Title
-              Text(
-                'Password Categories',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF2D3748),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Category Grid
-              _buildCategoryGrid(),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
-      floatingActionButton: _buildFloatingActionButton(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-    );
-  }
-
-  Widget _buildHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Hi User! 👋',
-          style: GoogleFonts.poppins(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFF2D3748),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Welcome back',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            color: const Color(0xFF718096),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCategoryGrid() {
-    final categories = [
-      {
-        'name': 'Games',
-        'icon': Icons.games_rounded,
-        'color': const Color(0xFF8B5CF6),
-      },
-      {
-        'name': 'Student',
-        'icon': Icons.school_rounded,
-        'color': const Color(0xFF3B82F6),
-      },
-      {
-        'name': 'Google',
-        'icon': Icons.g_mobiledata_rounded,
-        'color': const Color(0xFFEF4444),
-      },
-      {
-        'name': 'App',
-        'icon': Icons.apps_rounded,
-        'color': const Color(0xFF10B981),
-      },
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.0,
-      ),
-      itemCount: categories.length,
-      itemBuilder: (context, index) {
-        final category = categories[index];
-        final categoryName = category['name'] as String;
-
-        return CategoryCard(
-          categoryName: categoryName,
-          icon: category['icon'] as IconData,
-          iconColor: category['color'] as Color,
-          itemCount: _categoryCounts[categoryName] ?? 0,
-          onTap: () => _navigateToDetail(categoryName),
-        );
-      },
-    );
   }
 
   void _navigateToDetail(String categoryName) async {
@@ -175,7 +46,6 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context) => DetailListScreen(categoryName: categoryName),
       ),
     );
-    // Refresh counts after returning
     if (mounted) _loadCategoryCounts();
   }
 
@@ -184,98 +54,295 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute(builder: (context) => const SettingsScreen()),
     );
-    // Refresh counts after returning (in case data was reset)
     if (mounted) _loadCategoryCounts();
   }
 
-  Widget _buildBottomNavigationBar() {
-    return BottomAppBar(
-      shape: const CircularNotchedRectangle(),
-      notchMargin: 8,
-      color: Colors.white,
-      elevation: 16,
-      child: SizedBox(
-        height: 60,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            // Left side items
-            _buildNavItem(0, Icons.home_rounded, 'Home'),
-            _buildNavItem(1, Icons.folder_rounded, 'Categories'),
+  // --- UI SECTION ---
+  // Palet Warna High Contrast (Mudah Dibaca)
+  final Color _bgMain = const Color(0xFFF9FAFB); // Cool White
+  final Color _textDark = const Color(0xFF111827); // Hampir Hitam
+  final Color _panelColor = const Color(0xFF1F2937); // Dark Grey Panel
 
-            // Center space for FAB
-            const SizedBox(width: 48),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _bgMain,
+      body: SafeArea(
+        bottom: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 24),
 
-            // Right side items
-            _buildNavItem(2, Icons.settings_rounded, 'Settings'),
-            _buildNavItem(3, Icons.person_rounded, 'Profile'),
-          ],
+              _buildDashboardPanel(),
+              const SizedBox(height: 32),
+
+              Text(
+                "Kategori Password",
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700, // Bold Jelas
+                  color: _textDark,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              _buildCategoryList(),
+              const SizedBox(height: 100),
+            ],
+          ),
         ),
       ),
+      bottomNavigationBar: _buildBottomNav(),
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label) {
-    final isSelected = _currentNavIndex == index;
-
-    return InkWell(
-      onTap: () {
-        if (index == 2) {
-          // Settings
-          _navigateToSettings();
-        } else {
-          setState(() {
-            _currentNavIndex = index;
-          });
-        }
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+  Widget _buildHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              icon,
-              color: isSelected
-                  ? const Color(0xFF6C63FF)
-                  : const Color(0xFF718096),
-              size: 24,
-            ),
-            const SizedBox(height: 2),
             Text(
-              label,
+              'Selamat Pagi,',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: const Color(0xFF6B7280),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              'Jenifer',
               style: GoogleFonts.poppins(
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected
-                    ? const Color(0xFF6C63FF)
-                    : const Color(0xFF718096),
+                fontSize: 28,
+                fontWeight: FontWeight.w700, // Bold
+                color: _textDark,
+                height: 1.2,
               ),
             ),
           ],
         ),
+        CircleAvatar(
+          radius: 24,
+          backgroundColor: Colors.white,
+          backgroundImage: const NetworkImage(
+            'https://i.pravatar.cc/150?img=5',
+          ), // Dummy image atau icon
+          // Jika tidak ada gambar, pakai icon:
+          // child: Icon(Icons.person, color: Colors.grey),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDashboardPanel() {
+    int total = _categoryCounts.values.fold(0, (sum, count) => sum + count);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: _panelColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: _panelColor.withOpacity(0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.check_circle,
+                      color: Color(0xFF34D399),
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      "Secure Mode",
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            "Total Akun Tersimpan",
+            style: GoogleFonts.inter(fontSize: 14, color: Colors.grey.shade400),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "$total Akun",
+            style: GoogleFonts.poppins(
+              fontSize: 36,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildFloatingActionButton() {
-    return FloatingActionButton(
-      onPressed: () {
-        // TODO: Navigate to add new password screen
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Add New Password', style: GoogleFonts.poppins()),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+  Widget _buildCategoryList() {
+    final categories = [
+      {
+        'name': 'Games',
+        'icon': Icons.sports_esports_rounded,
+        'color': Colors.purple,
+      },
+      {'name': 'Student', 'icon': Icons.school_rounded, 'color': Colors.blue},
+      {
+        'name': 'Google',
+        'icon': Icons.g_mobiledata_rounded,
+        'color': Colors.red,
+      },
+      {'name': 'App', 'icon': Icons.apps_rounded, 'color': Colors.green},
+    ];
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: categories.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final cat = categories[index];
+        final name = cat['name'] as String;
+        final Color color = cat['color'] as Color;
+        final count = _categoryCounts[name] ?? 0;
+
+        return GestureDetector(
+          onTap: () => _navigateToDetail(name),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(cat['icon'] as IconData, color: color, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: _textDark,
+                        ),
+                      ),
+                      Text(
+                        "$count akun",
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: Colors.grey.shade400,
+                ),
+              ],
             ),
           ),
         );
       },
-      backgroundColor: const Color(0xFF6C63FF),
-      elevation: 4,
-      child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+    );
+  }
+
+  Widget _buildBottomNav() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade100)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+      child: SafeArea(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _navItem(Icons.grid_view_rounded, 0),
+            _navItem(Icons.folder_open_rounded, 1),
+            // Tombol Add Besar
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: _textDark,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: _textDark.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.add, color: Colors.white, size: 28),
+            ),
+            _navItem(Icons.settings_outlined, 2),
+            _navItem(Icons.person_outline_rounded, 3),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _navItem(IconData icon, int index) {
+    bool isSelected = _currentNavIndex == index;
+    return GestureDetector(
+      onTap: () {
+        if (index == 2) _navigateToSettings();
+        setState(() => _currentNavIndex = index);
+      },
+      child: Icon(
+        icon,
+        size: 28,
+        color: isSelected ? _textDark : Colors.grey.shade400,
+      ),
     );
   }
 }

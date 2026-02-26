@@ -14,8 +14,15 @@ import 'bulk_import_screen.dart';
 
 class DetailListScreen extends StatefulWidget {
   final String categoryName;
+  final int? colorValue;
+  final int? iconCodePoint;
 
-  const DetailListScreen({super.key, required this.categoryName});
+  const DetailListScreen({
+    super.key,
+    required this.categoryName,
+    this.colorValue,
+    this.iconCodePoint,
+  });
 
   @override
   State<DetailListScreen> createState() => _DetailListScreenState();
@@ -136,22 +143,26 @@ class _DetailListScreenState extends State<DetailListScreen> {
   }
 
   // ===========================================================================
-  // 2. UI SECTION (REFACTORED TO MATCH REFERENCE 2)
+  // 2. UI SECTION (REFACTORED TO MATCH DARK THEME)
   // ===========================================================================
 
-  final Color _bgLight = const Color(0xFFF2F2F7);
-  final Color _panelDark = const Color(0xFF1C1C1E);
-  final Color _textMain = const Color(0xFF000000);
+  final Color _bgDark = const Color(0xFF050505);
+  final Color _surfaceColor = const Color(0xFF121212);
+  final Color _textWhite = const Color(0xFFFFFFFF);
+  final Color _textGrey = const Color(0xFF9CA3AF);
 
   // Helper untuk mendapatkan warna tema berdasarkan kategori
   Color _getThemeColor() {
+    if (widget.colorValue != null) {
+      return Color(widget.colorValue!);
+    }
     return _getCategoryColor(widget.categoryName);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bgLight,
+      backgroundColor: _bgDark,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -208,7 +219,7 @@ class _DetailListScreenState extends State<DetailListScreen> {
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: _textMain,
+              color: _textWhite,
             ),
           ),
           // Placeholder button untuk balance layout (atau bisa jadi tombol search)
@@ -221,18 +232,21 @@ class _DetailListScreenState extends State<DetailListScreen> {
   Widget _buildDarkHeaderPanel() {
     // Hitung total item
     int totalItems = _subfolders.length + _directAccounts.length;
-    IconData catIcon = _getCategoryIcon(widget.categoryName);
+    IconData catIcon = widget.iconCodePoint != null
+        ? IconData(widget.iconCodePoint!, fontFamily: 'MaterialIcons')
+        : _getCategoryIcon(widget.categoryName);
     Color themeColor = _getThemeColor();
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: _panelDark,
+        color: _surfaceColor,
         borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withOpacity(0.5),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -388,17 +402,18 @@ class _DetailListScreenState extends State<DetailListScreen> {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: _surfaceColor,
           shape: BoxShape.circle,
+          border: Border.all(color: Colors.white10),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(0.2),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Icon(icon, size: 20, color: _panelDark),
+        child: Icon(icon, size: 20, color: _textWhite),
       ),
     );
   }
@@ -427,11 +442,12 @@ class _DetailListScreenState extends State<DetailListScreen> {
         FloatingActionButton.small(
           heroTag: 'subfolder',
           onPressed: _navigateToAddSubfolder,
-          backgroundColor: Colors.white,
+          backgroundColor: _surfaceColor,
           foregroundColor: _getThemeColor(),
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Colors.white10),
           ),
           child: const Icon(Icons.create_new_folder_outlined),
         ),
@@ -443,17 +459,17 @@ class _DetailListScreenState extends State<DetailListScreen> {
           child: FloatingActionButton.extended(
             heroTag: 'account',
             onPressed: _navigateToAddAccount,
-            backgroundColor: _panelDark, // Hitam agar kontras
+            backgroundColor: _textWhite, // Putih agar kontras
             elevation: 4,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
             ),
-            icon: const Icon(Icons.person_add_rounded, color: Colors.white),
+            icon: const Icon(Icons.person_add_rounded, color: Colors.black),
             label: Text(
               'New Account',
               style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: Colors.black,
                 fontSize: 15,
               ),
             ),
@@ -465,32 +481,12 @@ class _DetailListScreenState extends State<DetailListScreen> {
 
   // Utilities Warna & Icon
   IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'Games':
-        return Icons.games_rounded;
-      case 'Student':
-        return Icons.school_rounded;
-      case 'Google':
-        return Icons.g_mobiledata_rounded;
-      case 'App':
-        return Icons.apps_rounded;
-      default:
-        return Icons.folder_rounded;
-    }
+    // Fallback if no icon passed
+    return Icons.folder_rounded;
   }
 
   Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'Games':
-        return const Color(0xFF8B5CF6);
-      case 'Student':
-        return const Color(0xFF3B82F6);
-      case 'Google':
-        return const Color(0xFFEF4444);
-      case 'App':
-        return const Color(0xFF10B981);
-      default:
-        return const Color(0xFF6C63FF);
-    }
+    // Fallback if no color passed
+    return const Color(0xFF6C63FF);
   }
 }

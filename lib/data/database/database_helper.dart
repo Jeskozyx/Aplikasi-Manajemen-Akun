@@ -43,7 +43,7 @@ class DatabaseHelper {
     // Open database with encryption
     final db = await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: (db) async {
@@ -57,6 +57,17 @@ class DatabaseHelper {
 
   /// Creates the database tables.
   Future<void> _createDB(Database db, int version) async {
+    // Categories table
+    await db.execute('''
+      CREATE TABLE categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        description TEXT,
+        icon_code_point INTEGER,
+        color_value INTEGER
+      )
+    ''');
+
     // Subfolders table
     await db.execute('''
       CREATE TABLE subfolders (
@@ -91,8 +102,50 @@ class DatabaseHelper {
       // Drop old tables and recreate
       await db.execute('DROP TABLE IF EXISTS passwords');
       await db.execute('DROP TABLE IF EXISTS subfolders');
+      await db.execute('DROP TABLE IF EXISTS categories');
       await _createDB(db, newVersion);
+    } else if (oldVersion < 3) {
+      // Add categories table for version 2 -> 3 upgrade if needed
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS categories (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          description TEXT,
+          icon_code_point INTEGER,
+          color_value INTEGER
+        )
+      ''');
     }
+  }
+
+  // ==================== CATEGORIES OPERATIONS ====================
+
+  /// Inserts a new category.
+  Future<int> insertCategory(
+    String name, {
+    String? description,
+    int? iconCodePoint,
+    int? colorValue,
+  }) async {
+    final db = await database;
+    return await db.insert('categories', {
+      'name': name,
+      'description': description,
+      'icon_code_point': iconCodePoint,
+      'color_value': colorValue,
+    });
+  }
+
+  /// Gets all categories.
+  Future<List<Map<String, dynamic>>> getAllCategories() async {
+    final db = await database;
+    return await db.query('categories');
+  }
+
+  /// Deletes a category.
+  Future<int> deleteCategory(String name) async {
+    final db = await database;
+    return await db.delete('categories', where: 'name = ?', whereArgs: [name]);
   }
 
   // ==================== SUBFOLDER OPERATIONS ====================
@@ -195,12 +248,14 @@ class DatabaseHelper {
     final db = await database;
     final counts = <String, int>{};
 
-    for (final category in PasswordModel.categories) {
+    final categories = await getAllCategories();
+    for (final catMap in categories) {
+      final categoryName = catMap['name'] as String;
       final result = await db.rawQuery(
         'SELECT COUNT(*) as count FROM passwords WHERE category = ?',
-        [category],
+        [categoryName],
       );
-      counts[category] = Sqflite.firstIntValue(result) ?? 0;
+      counts[categoryName] = Sqflite.firstIntValue(result) ?? 0;
     }
 
     return counts;
@@ -235,6 +290,7 @@ class DatabaseHelper {
     final db = await database;
     await db.execute('DROP TABLE IF EXISTS passwords');
     await db.execute('DROP TABLE IF EXISTS subfolders');
-    await _createDB(db, 2);
+    await db.execute('DROP TABLE IF EXISTS categories');
+    await _createDB(db, 3);
   }
 }

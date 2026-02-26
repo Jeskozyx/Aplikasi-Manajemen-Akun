@@ -49,6 +49,12 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
     'login',
   ];
 
+  // Dark Theme Colors
+  final Color _bgDark = const Color(0xFF050505);
+  final Color _surfaceColor = const Color(0xFF121212);
+  final Color _textWhite = const Color(0xFFFFFFFF);
+  final Color _textGrey = const Color(0xFF9CA3AF);
+
   @override
   void dispose() {
     _textController.dispose();
@@ -454,15 +460,12 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
+      backgroundColor: _bgDark,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_rounded,
-            color: Color(0xFF2D3748),
-          ),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: _textWhite),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -470,7 +473,7 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF2D3748),
+            color: _textWhite,
           ),
         ),
         centerTitle: true,
@@ -484,28 +487,48 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFF3F0FF),
+                color: _surfaceColor,
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white10),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    widget.subfolderId != null
-                        ? Icons.folder_rounded
-                        : Icons.category_rounded,
-                    color: const Color(0xFF6C63FF),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6C63FF).withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.folder_rounded,
+                      color: Color(0xFF6C63FF),
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      widget.subfolderId != null
-                          ? '${widget.category} > ${widget.subfolderName}'
-                          : widget.category,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF6C63FF),
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Target Folder",
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            color: _textGrey,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.subfolderId != null
+                              ? '${widget.category} > ${widget.subfolderName}'
+                              : widget.category,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: _textWhite,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -517,9 +540,11 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF3CD),
+                color: const Color(0xFFF59E0B).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFFFE69C)),
+                border: Border.all(
+                  color: const Color(0xFFF59E0B).withOpacity(0.3),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -528,7 +553,7 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
                     children: [
                       const Icon(
                         Icons.info_outline,
-                        color: Color(0xFF856404),
+                        color: Color(0xFFF59E0B),
                         size: 20,
                       ),
                       const SizedBox(width: 8),
@@ -536,7 +561,7 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
                         'Petunjuk',
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF856404),
+                          color: const Color(0xFFF59E0B),
                         ),
                       ),
                     ],
@@ -549,10 +574,7 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
                     '• @username: password\n'
                     '• username: value / pw: value\n'
                     '• user: value | pass: value',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: const Color(0xFF856404),
-                    ),
+                    style: GoogleFonts.poppins(fontSize: 12, color: _textGrey),
                   ),
                 ],
               ),
@@ -565,25 +587,25 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF2D3748),
+                color: _textWhite,
               ),
             ),
             const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: _surfaceColor,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                border: Border.all(color: Colors.white10),
               ),
               child: TextField(
                 controller: _textController,
                 maxLines: 8,
-                style: GoogleFonts.poppins(fontSize: 13),
+                style: GoogleFonts.poppins(fontSize: 13, color: _textWhite),
                 decoration: InputDecoration(
                   hintText: 'Paste teks berisi username dan password...',
                   hintStyle: GoogleFonts.poppins(
                     fontSize: 13,
-                    color: Colors.grey,
+                    color: _textGrey,
                   ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.all(16),
@@ -625,7 +647,7 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF2D3748),
+                      color: _textWhite,
                     ),
                   ),
                   TextButton(
@@ -690,12 +712,10 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _surfaceColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: account.isSelected
-              ? const Color(0xFF10B981)
-              : const Color(0xFFE2E8F0),
+          color: account.isSelected ? const Color(0xFF10B981) : Colors.white10,
           width: account.isSelected ? 2 : 1,
         ),
       ),
@@ -710,12 +730,12 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
               decoration: BoxDecoration(
                 color: account.isSelected
                     ? const Color(0xFF10B981)
-                    : Colors.white,
+                    : Colors.transparent,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
                   color: account.isSelected
                       ? const Color(0xFF10B981)
-                      : const Color(0xFFCBD5E1),
+                      : _textGrey,
                 ),
               ),
               child: account.isSelected
@@ -738,15 +758,11 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF2D3748),
+                          color: _textWhite,
                         ),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(
-                        Icons.edit,
-                        size: 14,
-                        color: Color(0xFF718096),
-                      ),
+                      Icon(Icons.edit, size: 14, color: _textGrey),
                     ],
                   ),
                 ),
@@ -754,17 +770,11 @@ class _BulkImportScreenState extends State<BulkImportScreen> {
                 if (account.username != null)
                   Text(
                     'User: ${account.username}',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: const Color(0xFF718096),
-                    ),
+                    style: GoogleFonts.poppins(fontSize: 12, color: _textGrey),
                   ),
                 Text(
                   'Pass: ${account.password}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: const Color(0xFF718096),
-                  ),
+                  style: GoogleFonts.poppins(fontSize: 12, color: _textGrey),
                 ),
               ],
             ),

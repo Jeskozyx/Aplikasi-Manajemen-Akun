@@ -29,11 +29,10 @@ class _AccountCardState extends State<AccountCard> {
   bool _isPasswordVisible = false;
 
   // Warna yang kontras agar mudah dibaca
-  final Color _textMain = const Color(
-    0xFF111827,
-  ); // Abu-abu gelap (Hampir hitam)
-  final Color _textSub = const Color(0xFF6B7280); // Abu-abu sedang
-  final Color _accentColor = const Color(0xFF2563EB); // Biru (Jelas & Tegas)
+  // Warna yang kontras agar mudah dibaca
+  final Color _textMain = const Color(0xFFFFFFFF); // Putih
+  final Color _textSub = const Color(0xFF9CA3AF); // Abu-abu terang (Grey 400)
+  final Color _accentColor = const Color(0xFF3B82F6); // Blue 500
 
   @override
   Widget build(BuildContext context) {
@@ -48,12 +47,12 @@ class _AccountCardState extends State<AccountCard> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFF121212), // Dark Surface
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(color: Colors.white10),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withOpacity(0.2),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -110,7 +109,7 @@ class _AccountCardState extends State<AccountCard> {
             ),
 
             const SizedBox(height: 12),
-            Divider(height: 1, color: Colors.grey.shade100),
+            Divider(height: 1, color: Colors.white10),
             const SizedBox(height: 12),
 
             // Info Username (Inter - Mudah dibaca untuk teks kecil)
@@ -119,7 +118,7 @@ class _AccountCardState extends State<AccountCard> {
               style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade400,
+                color: const Color(0xFF6B7280), // Grey 500
                 letterSpacing: 0.5,
               ),
             ),
@@ -141,7 +140,7 @@ class _AccountCardState extends State<AccountCard> {
               style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade400,
+                color: const Color(0xFF6B7280), // Grey 500
                 letterSpacing: 0.5,
               ),
             ),

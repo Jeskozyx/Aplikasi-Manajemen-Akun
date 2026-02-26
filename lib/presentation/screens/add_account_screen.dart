@@ -32,6 +32,12 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
   bool _isLoading = false;
   bool _isPasswordVisible = false;
 
+  // Dark Theme Colors
+  final Color _bgDark = const Color(0xFF050505);
+  final Color _surfaceColor = const Color(0xFF121212);
+  final Color _textWhite = const Color(0xFFFFFFFF);
+  final Color _textGrey = const Color(0xFF9CA3AF);
+
   @override
   void initState() {
     super.initState();
@@ -166,7 +172,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
+      backgroundColor: _bgDark,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -174,11 +180,12 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
         leading: Container(
           margin: const EdgeInsets.only(left: 16),
           child: IconButton(
-            icon: const Icon(Icons.close_rounded, color: Color(0xFF2D3748)),
+            icon: Icon(Icons.close_rounded, color: _textWhite),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: _surfaceColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Colors.white10),
               ),
             ),
             onPressed: () => Navigator.pop(context),
@@ -189,7 +196,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFF2D3748),
+            color: _textWhite,
           ),
         ),
         actions: [
@@ -224,15 +231,15 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                 margin: const EdgeInsets.only(bottom: 24),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE0E7FF),
+                  color: _surfaceColor,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFC7D2FE)),
+                  border: Border.all(color: Colors.white10),
                 ),
                 child: Row(
                   children: [
                     const Icon(
                       Icons.folder_shared_rounded,
-                      color: Color(0xFF4338CA),
+                      color: Color(0xFF6C63FF),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -243,7 +250,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                             'Location',
                             style: GoogleFonts.poppins(
                               fontSize: 12,
-                              color: const Color(0xFF4338CA),
+                              color: _textGrey,
                             ),
                           ),
                           Text(
@@ -253,7 +260,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF312E81),
+                              color: _textWhite,
                             ),
                           ),
                         ],
@@ -324,16 +331,16 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: _surfaceColor,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: Colors.white10),
                 ),
                 child: SwitchListTile(
                   title: Text(
                     'Active Account',
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF2D3748),
+                      color: _textWhite,
                     ),
                   ),
                   value: _isActive,
@@ -354,20 +361,20 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _saveAccount,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6C63FF),
-                    foregroundColor: Colors.white,
+                    backgroundColor: _textWhite,
+                    foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                     elevation: 4,
-                    shadowColor: const Color(0xFF6C63FF).withValues(alpha: 0.4),
+                    shadowColor: _textWhite.withOpacity(0.2),
                   ),
                   child: _isLoading
                       ? const SizedBox(
                           width: 24,
                           height: 24,
                           child: CircularProgressIndicator(
-                            color: Colors.white,
+                            color: Colors.black,
                             strokeWidth: 3,
                           ),
                         )
@@ -405,7 +412,7 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
           style: GoogleFonts.poppins(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF4A5568),
+            color: _textGrey,
           ),
         ),
         const SizedBox(height: 8),
@@ -415,22 +422,19 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
           keyboardType: keyboardType,
           style: GoogleFonts.poppins(
             fontSize: 16, // Larger input text
-            color: const Color(0xFF2D3748),
+            color: _textWhite,
           ),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.poppins(
-              color: const Color(0xFFA0AEC0),
-              fontSize: 14,
-            ),
-            prefixIcon: Icon(icon, color: const Color(0xFF718096)),
+            hintStyle: GoogleFonts.poppins(color: _textGrey, fontSize: 14),
+            prefixIcon: Icon(icon, color: _textGrey),
             suffixIcon: isPassword
                 ? IconButton(
                     icon: Icon(
                       _isPasswordVisible
                           ? Icons.visibility_off_rounded
                           : Icons.visibility_rounded,
-                      color: const Color(0xFF718096),
+                      color: _textGrey,
                     ),
                     onPressed: () {
                       setState(() {
@@ -440,14 +444,14 @@ class _AddAccountScreenState extends State<AddAccountScreen> {
                   )
                 : null,
             filled: true,
-            fillColor: Colors.white,
+            fillColor: _surfaceColor,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: const BorderSide(color: Colors.white10),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),

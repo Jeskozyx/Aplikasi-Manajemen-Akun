@@ -22,6 +22,12 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
   late TextEditingController _nameController;
   bool _isLoading = false;
 
+  // Dark Theme Colors
+  final Color _bgDark = const Color(0xFF050505);
+  final Color _surfaceColor = const Color(0xFF121212);
+  final Color _textWhite = const Color(0xFFFFFFFF);
+  final Color _textGrey = const Color(0xFF9CA3AF);
+
   @override
   void initState() {
     super.initState();
@@ -142,7 +148,7 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
+      backgroundColor: _bgDark,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -150,11 +156,12 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
         leading: Container(
           margin: const EdgeInsets.only(left: 16),
           child: IconButton(
-            icon: const Icon(Icons.close_rounded, color: Color(0xFF2D3748)),
+            icon: Icon(Icons.close_rounded, color: _textWhite),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white,
+              backgroundColor: _surfaceColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Colors.white10),
               ),
             ),
             onPressed: () => Navigator.pop(context),
@@ -165,7 +172,7 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFF2D3748),
+            color: _textWhite,
           ),
         ),
         actions: [
@@ -200,9 +207,9 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
                 margin: const EdgeInsets.only(bottom: 24),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEDE9FE),
+                  color: _surfaceColor,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFDDD6FE)),
+                  border: Border.all(color: Colors.white10),
                 ),
                 child: Row(
                   children: [
@@ -219,7 +226,7 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
                             'Category',
                             style: GoogleFonts.poppins(
                               fontSize: 12,
-                              color: const Color(0xFF7C3AED),
+                              color: _textGrey,
                             ),
                           ),
                           Text(
@@ -227,7 +234,7 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF5B21B6),
+                              color: _textWhite,
                             ),
                           ),
                         ],
@@ -242,35 +249,29 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF4A5568),
+                  color: _textGrey,
                 ),
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _nameController,
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  color: const Color(0xFF2D3748),
-                ),
+                style: GoogleFonts.poppins(fontSize: 16, color: _textWhite),
                 decoration: InputDecoration(
                   hintText: 'e.g. Work Accounts',
                   hintStyle: GoogleFonts.poppins(
-                    color: const Color(0xFFA0AEC0),
+                    color: _textGrey,
                     fontSize: 14,
                   ),
-                  prefixIcon: const Icon(
-                    Icons.folder_open_rounded,
-                    color: Color(0xFF718096),
-                  ),
+                  prefixIcon: Icon(Icons.folder_open_rounded, color: _textGrey),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: _surfaceColor,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: const BorderSide(color: Colors.white10),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -297,8 +298,8 @@ class _AddSubfolderScreenState extends State<AddSubfolderScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _saveSubfolder,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6C63FF),
-                    foregroundColor: Colors.white,
+                    backgroundColor: _textWhite, // Button white for contrast
+                    foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),

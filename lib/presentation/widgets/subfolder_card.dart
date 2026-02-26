@@ -54,14 +54,14 @@ class SubfolderCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFF121212), // Surface Dark
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(color: Colors.white10),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withOpacity(0.2),
               blurRadius: 10,
-              offset: const Offset(0, 2),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -69,11 +69,12 @@ class SubfolderCard extends StatelessWidget {
           children: [
             // --- BAGIAN ICON (YANG DIUBAH) ---
             Container(
-              width: 52, // Ukuran sedikit diperbesar agar logo jelas
+              width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
+                color: const Color(0xFF1A1A1A), // Darker placeholder
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.white10),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(14),
@@ -132,7 +133,7 @@ class SubfolderCard extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF111827),
+                      color: Colors.white,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -142,7 +143,7 @@ class SubfolderCard extends StatelessWidget {
                     '$accountCount item disimpan',
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      color: const Color(0xFF6B7280),
+                      color: const Color(0xFF9CA3AF),
                     ),
                   ),
                 ],

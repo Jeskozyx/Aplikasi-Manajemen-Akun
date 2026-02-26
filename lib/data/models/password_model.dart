@@ -13,7 +13,7 @@ class PasswordModel {
   final int? subfolderId;
 
   /// Available categories for password entries.
-  static const List<String> categories = ['Games', 'Student', 'Google', 'App'];
+  /// Categories are now dynamic and stored in the database.
 
   PasswordModel({
     this.id,
